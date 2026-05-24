@@ -1352,19 +1352,52 @@ if (!gotTheLock) {
       }
     });
     autoUpdater.on('update-downloaded', (info) => {
-      console.log('Update downloaded. Installing now...');
+      console.log('Update downloaded. Prompting user to install...');
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.executeJavaScript(`
             if (document.getElementById('qadri-updater-text')) {
-                document.getElementById('qadri-updater-text').innerText = 'Update Ready! Restarting in 3s...';
+                document.getElementById('qadri-updater-text').innerText = 'Update Ready! Please confirm restart...';
                 document.getElementById('qadri-updater-bar').style.width = '100%';
                 document.getElementById('qadri-updater-bar').style.background = '#00ff77';
             }
         `).catch(e => console.error(e));
       }
-      setTimeout(() => {
-        autoUpdater.quitAndInstall();
-      }, 3000);
+
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Update Ready',
+        message: 'A new version of Qadri AI has been downloaded.',
+        detail: 'Do you want to restart the application to apply the updates now?',
+        buttons: ['Restart Now', 'Later'],
+        defaultId: 0,
+        cancelId: 1
+      }).then((result) => {
+        if (result.response === 0) {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.executeJavaScript(`
+                if (document.getElementById('qadri-updater-text')) {
+                    document.getElementById('qadri-updater-text').innerText = 'Restarting App...';
+                }
+            `).catch(e => console.error(e));
+          }
+          // isSilent: false, isForceRunAfter: true (ensures the app starts again on Windows)
+          autoUpdater.quitAndInstall(false, true);
+        } else {
+          // Hide UI if they choose "Later"
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.executeJavaScript(`
+                if (document.getElementById('qadri-updater-ui')) {
+                    document.getElementById('qadri-updater-ui').style.opacity = '0';
+                    setTimeout(() => {
+                        if (document.getElementById('qadri-updater-ui')) {
+                            document.getElementById('qadri-updater-ui').remove();
+                        }
+                    }, 500);
+                }
+            `).catch(e => console.error(e));
+          }
+        }
+      });
     });
 
     try {
