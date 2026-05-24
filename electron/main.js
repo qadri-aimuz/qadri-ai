@@ -52,6 +52,8 @@ const mammoth = require('mammoth');
 
 let currentVertexToken = null;
 
+// Fix for VPS/Virtual Server Black Screen Issues
+app.disableHardwareAcceleration();
 
 // NEURAL BROWSER GLOBAL HANDLERS
 // Embedded window disabled - Playwright now runs headless:false and shows its own native Chromium window
