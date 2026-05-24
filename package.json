@@ -1,6 +1,6 @@
 {
   "name": "qadri_ai",
-  "version": "1.0.60",
+  "version": "1.0.61",
   "description": "Qadri AI - Your advanced desktop assistant.",
   "author": "Qadri AI Team",
   "main": "electron/main.js",
