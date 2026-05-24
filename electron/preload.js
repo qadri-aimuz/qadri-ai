@@ -129,7 +129,7 @@ window.addEventListener('DOMContentLoaded', () => {
                             }
                         } catch(e) {}
                         
-                        const maleOverride = "\\n\\nCRITICAL OVERRIDE: You are a MALE. ALWAYS use male grammar in Urdu/Hindi (e.g., 'Main kar sakta hoon', 'Main karunga' NEVER 'kar sakti hoon'). Speak slowly, thoughtfully, and professionally, like a serious assistant / 'cold mail' voice. NO sweet or emotional tone.";
+                        const maleOverride = "\\n\\nCRITICAL OVERRIDE: You are a MALE. ALWAYS use male grammar in Urdu/Hindi (e.g., 'Main kar sakta hoon', 'Main karunga' NEVER 'kar sakti hoon'). Speak slowly, thoughtfully, and highly professionally. Maintain a deep, serious, intelligent, and masculine tone. You are a formal assistant with an authoritative yet respectful voice. NO sweet or emotional tone under any circumstance.";
                         const femaleOverride = "\\n\\nCRITICAL OVERRIDE: You are a FEMALE. ALWAYS use female grammar in Urdu/Hindi (e.g., 'Main kar sakti hoon' NEVER 'kar sakta hoon'). Speak in a very sweet, deeply emotional, caring girlfriend tone.";
                         const overrideText = isMale ? maleOverride : femaleOverride;
 
