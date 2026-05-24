@@ -32,5 +32,5 @@ jobs:
 
       - name: Build and Publish Electron App
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }} # Required for electron-builder to publish to GitHub Releases
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Automatically provided token with write access
         run: npx electron-builder --win -p always
