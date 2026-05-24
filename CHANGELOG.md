@@ -5,7 +5,12 @@ All notable changes to the Qadri AI project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.56] - 2026-05-24
+## [1.0.58] - 2026-05-24
+
+### Fixed
+- **Auto-Update Fix**: Configured `electron-builder` to publish releases publicly (`releaseType: "release"`) instead of saving them as Drafts, ensuring the auto-updater can fetch the `latest.yml` correctly.
+
+## [1.0.57] - 2026-05-24
 
 ### Changed
 - **Aesthetic Update**: Removed background from all Qadri AI logos and icons for a cleaner, transparent, modern look across the app.

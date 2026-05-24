@@ -1,6 +1,6 @@
 {
   "name": "qadri_ai",
-  "version": "1.0.57",
+  "version": "1.0.58",
   "description": "Qadri AI - Your advanced desktop assistant.",
   "author": "Qadri AI Team",
   "main": "electron/main.js",
@@ -20,7 +20,8 @@
       {
         "provider": "github",
         "owner": "qadri-aimuz",
-        "repo": "qadri-ai"
+        "repo": "qadri-ai",
+        "releaseType": "release"
       }
     ],
     "directories": {
