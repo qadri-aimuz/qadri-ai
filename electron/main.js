@@ -109,9 +109,9 @@ function createWindow() {
     },
     autoHideMenuBar: true,
     icon: nativeImage.createFromPath(
-      process.env.NODE_ENV === 'development'
-        ? path.join(__dirname, '../public/logo.png')
-        : path.join(process.resourcesPath, 'public/logo.png')
+      app.isPackaged
+        ? path.join(process.resourcesPath, 'public/logo.png')
+        : path.join(__dirname, '../public/logo.png')
     )
   });
 
@@ -127,6 +127,7 @@ function createWindow() {
     width: sw, height: sh,
     x: 0, y: 0,
     frame: false,
+    show: false,
     transparent: false,
     backgroundColor: '#030509',
     alwaysOnTop: true,
@@ -138,34 +139,66 @@ function createWindow() {
       webSecurity: false,
     },
     icon: nativeImage.createFromPath(
-      process.env.NODE_ENV === 'development'
-        ? path.join(__dirname, '../public/logo.png')
-        : path.join(process.resourcesPath, 'public/logo.png')
+      app.isPackaged
+        ? path.join(process.resourcesPath, 'public/logo.png')
+        : path.join(__dirname, '../public/logo.png')
     )
   });
 
-  const splashPath = process.env.NODE_ENV === 'development'
-    ? path.join(__dirname, '../public/splash.html')
-    : path.join(process.resourcesPath, 'public/splash.html');
+  const splashPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'public/splash.html')
+    : path.join(__dirname, '../public/splash.html');
 
   splashWin.loadFile(splashPath);
-  splashWin.center();
 
-  // After 8 seconds: close splash → show main window (license auto-passes)
+  // Show splash once it's fully loaded
+  splashWin.once('ready-to-show', () => {
+    splashWin.show();
+    splashWin.center();
+    console.log('[Splash] Cinematic splash screen displayed.');
+  });
+
+  // Fallback: force-show splash after 1s if ready-to-show is slow
   setTimeout(() => {
-    if (splashWin && !splashWin.isDestroyed()) splashWin.close();
+    if (splashWin && !splashWin.isDestroyed() && !splashWin.isVisible()) {
+      splashWin.show();
+      splashWin.center();
+      console.log('[Splash] Fallback show triggered.');
+    }
+  }, 1000);
+
+  // After 8 seconds: close splash, then ensure main window is shown
+  setTimeout(() => {
+    if (splashWin && !splashWin.isDestroyed()) {
+      splashWin.close();
+      console.log('[Splash] Splash closed after 8s.');
+    }
+    // Fallback: if license-passed IPC was never called, show main window anyway
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+        console.log('[Main] Fallback: showing main window after splash.');
+        mainWindow.setResizable(true);
+        mainWindow.setMinimumSize(1000, 700);
+        mainWindow.center();
+        mainWindow.show();
+        mainWindow.focus();
+        mainWindow.maximize();
+      }
+    }, 500);
   }, 8000);
 
   // Main window loads in background — license-passed IPC will show it
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173');
   } else {
-    // PRODUCTION: Serve via local HTTP server
+    // PRODUCTION: Serve via local HTTP server (also used when running unpackaged via npm start)
     startProductionServer().then(port => {
       mainWindow.loadURL(`http://localhost:${port}/index.html`);
     }).catch(err => {
       console.error('Failed to start production server:', err);
-      const fallbackPath = path.join(__dirname, '../dist/index.html');
+      const fallbackPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'dist/index.html')
+        : path.join(__dirname, '../dist/index.html');
       mainWindow.loadFile(fallbackPath);
     });
   }
@@ -188,9 +221,9 @@ function createVideoWindow(videoId) {
       webSecurity: false,
     },
     icon: nativeImage.createFromPath(
-      process.env.NODE_ENV === 'development'
-        ? path.join(__dirname, '../public/logo.png')
-        : path.join(process.resourcesPath, 'public/logo.png')
+      app.isPackaged
+        ? path.join(process.resourcesPath, 'public/logo.png')
+        : path.join(__dirname, '../public/logo.png')
     )
   });
 
@@ -229,9 +262,9 @@ function createBrowserWindow(url = '') {
     },
     show: false,
     icon: nativeImage.createFromPath(
-      process.env.NODE_ENV === 'development'
-        ? path.join(__dirname, '../public/logo.png')
-        : path.join(process.resourcesPath, 'public/logo.png')
+      app.isPackaged
+        ? path.join(process.resourcesPath, 'public/logo.png')
+        : path.join(__dirname, '../public/logo.png')
     )
   });
 
@@ -1213,9 +1246,9 @@ if (!gotTheLock) {
 
     // ── BOOT SOUND ── Play initialize.wav at the very start
     try {
-      const soundPath = process.env.NODE_ENV === 'development'
-        ? path.join(__dirname, '../public/audio/initialize.wav')
-        : path.join(process.resourcesPath, 'public/audio/initialize.wav');
+      const soundPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'public/audio/initialize.wav')
+        : path.join(__dirname, '../public/audio/initialize.wav');
       exec(`powershell -c "(New-Object Media.SoundPlayer '${soundPath.replace(/\\/g, '\\\\')}').Play()"`, () => {});
     } catch (e) { console.log('Boot sound failed:', e.message); }
 
@@ -1276,22 +1309,62 @@ if (!gotTheLock) {
     });
     autoUpdater.on('update-available', (info) => {
       console.log('Update available:', info.version);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.executeJavaScript(`
+            if (!document.getElementById('qadri-updater-ui')) {
+                const updaterUI = document.createElement('div');
+                updaterUI.id = 'qadri-updater-ui';
+                updaterUI.style.cssText = "position:fixed;bottom:20px;right:20px;background:rgba(0,0,0,0.85);color:#fff;padding:15px;border-radius:12px;font-family:sans-serif;z-index:999999;box-shadow:0 8px 32px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);width:320px;transition:all 0.3s ease;";
+                updaterUI.innerHTML = '<div style="display:flex;align-items:center;margin-bottom:10px;"><div style="width:10px;height:10px;border-radius:50%;background:#00ffcc;margin-right:10px;box-shadow:0 0 10px #00ffcc;"></div><b style="font-size:14px;letter-spacing:0.5px;">Qadri AI Update</b></div><span id="qadri-updater-text" style="font-size:13px;color:#aaa;">Update ${info.version} available! Downloading...</span><div style="margin-top:12px;background:rgba(255,255,255,0.1);border-radius:6px;height:6px;overflow:hidden;"><div id="qadri-updater-bar" style="width:0%;height:100%;background:linear-gradient(90deg, #00ffcc, #0088ff);transition:width 0.3s ease;"></div></div>';
+                document.body.appendChild(updaterUI);
+            } else {
+                document.getElementById('qadri-updater-text').innerText = 'Update ${info.version} available! Downloading...';
+            }
+        `).catch(e => console.error(e));
+      }
     });
     autoUpdater.on('update-not-available', (info) => {
       console.log('Update not available.');
     });
     autoUpdater.on('error', (err) => {
       console.error('Error in auto-updater:', err);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.executeJavaScript(`
+            if (document.getElementById('qadri-updater-text')) {
+                document.getElementById('qadri-updater-text').innerText = 'Update failed. Retrying later...';
+                document.getElementById('qadri-updater-bar').style.background = '#ff4444';
+                setTimeout(() => { if (document.getElementById('qadri-updater-ui')) document.getElementById('qadri-updater-ui').style.opacity = '0'; }, 3000);
+                setTimeout(() => { if (document.getElementById('qadri-updater-ui')) document.getElementById('qadri-updater-ui').remove(); }, 3500);
+            }
+        `).catch(e => console.error(e));
+      }
     });
     autoUpdater.on('download-progress', (progressObj) => {
-      let log_message = `Download speed: ${Math.round(progressObj.bytesPerSecond / 1024)} KB/s`;
-      log_message += ` - Downloaded ${Math.round(progressObj.percent)}%`;
-      log_message += ` (${Math.round(progressObj.transferred / 1024 / 1024)}MB / ${Math.round(progressObj.total / 1024 / 1024)}MB)`;
-      console.log(log_message);
+      const percent = Math.round(progressObj.percent);
+      console.log(`Downloaded ${percent}%`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.executeJavaScript(`
+            if (document.getElementById('qadri-updater-text')) {
+                document.getElementById('qadri-updater-text').innerText = 'Downloading Update: ${percent}%';
+                document.getElementById('qadri-updater-bar').style.width = '${percent}%';
+            }
+        `).catch(e => console.error(e));
+      }
     });
     autoUpdater.on('update-downloaded', (info) => {
       console.log('Update downloaded. Installing now...');
-      autoUpdater.quitAndInstall();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.executeJavaScript(`
+            if (document.getElementById('qadri-updater-text')) {
+                document.getElementById('qadri-updater-text').innerText = 'Update Ready! Restarting in 3s...';
+                document.getElementById('qadri-updater-bar').style.width = '100%';
+                document.getElementById('qadri-updater-bar').style.background = '#00ff77';
+            }
+        `).catch(e => console.error(e));
+      }
+      setTimeout(() => {
+        autoUpdater.quitAndInstall();
+      }, 3000);
     });
 
     try {
