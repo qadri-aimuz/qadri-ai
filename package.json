@@ -1,0 +1,113 @@
+{
+  "name": "qadri_ai",
+  "version": "1.0.50",
+  "description": "Qadri AI - Your advanced desktop assistant.",
+  "author": "Qadri AI Team",
+  "main": "electron/main.js",
+  "license": "ISC",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env NODE_ENV=development electron .",
+    "build": "electron-builder --win",
+    "dist": "electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.qadri.ai",
+    "productName": "Qadri AI",
+    "copyright": "Copyright © 2025 Qadri AI Team",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "qadri-aimuz",
+        "repo": "qadri-ai"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "public/**/*",
+      "dist/**/*",
+      "audio/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public"
+      }
+    ],
+    "win": {
+      "executableName": "QadriAI",
+      "icon": "public/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "installerIcon": "public/icon.ico",
+      "installerHeaderIcon": "public/icon.ico",
+      "shortcutName": "Qadri AI",
+      "uninstallerIcon": "public/icon.ico",
+      "artifactName": "Qadri AI Setup ${version}.exe",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "menuCategory": "Qadri AI"
+    }
+  },
+  "dependencies": {
+    "@google/genai": "^1.41.0",
+    "@google/generative-ai": "^0.24.1",
+    "@jitsi/robotjs": "^0.6.21",
+    "@picovoice/porcupine-node": "^4.0.1",
+    "@picovoice/pvrecorder-node": "^1.2.8",
+    "axios": "^1.13.6",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "electron-updater": "^6.8.3",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "fast-glob": "^3.3.3",
+    "fs-extra": "^11.3.5",
+    "jimp": "^1.6.0",
+    "js-tiktoken": "^1.0.21",
+    "lowdb": "^7.0.1",
+    "lucide-react": "^0.562.0",
+    "mammoth": "^1.11.0",
+    "mermaid": "^11.12.2",
+    "mime-types": "^3.0.2",
+    "node-record-lpcm16": "^1.0.1",
+    "open": "^11.0.0",
+    "pdf-parse": "^2.4.5",
+    "playwright": "^1.58.2",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.6.0",
+    "remark-gfm": "^4.0.1",
+    "screenshot-desktop": "^1.15.3",
+    "serialport": "^13.0.0",
+    "systeminformation": "^5.31.1",
+    "tailwind-merge": "^3.4.0",
+    "tesseract.js": "^7.0.0",
+    "trash": "^10.1.1"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "electron": "^42.1.0",
+    "electron-builder": "^26.8.1",
+    "electron-packager": "^17.1.2"
+  }
+}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qadri AI - Neural Timeline</title>
+    <link rel="stylesheet" href="timeline.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Tools -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i data-lucide="brain-circuit"></i>
+                <h2>Rewind Engine</h2>
+            </div>
+            
+            <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="searchInput" placeholder="Search memory... e.g. 'Fiverr PDF'">
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All Memory</button>
+                <button class="filter-btn" data-filter="pinned"><i data-lucide="pin"></i> Pinned</button>
+            </div>
+
+            <div class="status-panel">
+                <div class="status-indicator">
+                    <span class="dot recording" id="recordDot"></span>
+                    <span id="recordStatusText">Recording Active</span>
+                </div>
+                <button id="toggleRecordBtn" class="action-btn pause-btn">
+                    <i data-lucide="pause-circle"></i> Pause Memory
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Timeline View -->
+        <main class="timeline-view">
+            <header class="timeline-header">
+                <h1>Neural Timeline</h1>
+                <p>Scroll back through your digital life.</p>
+            </header>
+
+            <div class="scrubber-container">
+                <div class="timeline-track" id="timelineTrack">
+                    <!-- Dynamic memory cards will be injected here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal-overlay" id="imageModal">
+        <div class="modal-content">
+            <button class="close-modal"><i data-lucide="x"></i></button>
+            <img id="modalImage" src="" alt="Memory Full Screen">
+            <div class="modal-info">
+                <h3 id="modalTime"></h3>
+                <p id="modalText"></p>
+                <button id="reopenBtn" class="action-btn primary"><i data-lucide="external-link"></i> Attempt Reopen Context</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="timeline.js"></script>
+</body>
+</html>

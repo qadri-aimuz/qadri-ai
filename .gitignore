@@ -1,0 +1,5 @@
+node_modules/
+dist/
+dist_final/
+release/
+electron.log

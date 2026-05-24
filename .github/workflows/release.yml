@@ -1,0 +1,36 @@
+name: Build and Release Qadri AI
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger workflow on version tags (e.g., v1.0.0)
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write # Need write permission to create GitHub Releases
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use LTS Node.js
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      # If you have a separate build script (e.g. for React/Vue), uncomment this:
+      # - name: Build Web Assets
+      #   run: npm run build
+
+      - name: Build and Publish Electron App
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }} # Required for electron-builder to publish to GitHub Releases
+        run: npx electron-builder --win -p always
