@@ -1,6 +1,6 @@
 {
   "name": "qadri_ai",
-  "version": "1.0.54",
+  "version": "1.0.55",
   "description": "Qadri AI - Your advanced desktop assistant.",
   "author": "Qadri AI Team",
   "main": "electron/main.js",
@@ -106,7 +106,7 @@
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
-    "electron": "^42.1.0",
+    "electron": "^31.0.0",
     "electron-builder": "^26.8.1",
     "electron-packager": "^17.1.2"
   }
