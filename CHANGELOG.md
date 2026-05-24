@@ -5,6 +5,11 @@ All notable changes to the Qadri AI project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.56] - 2026-05-24
+
+### Changed
+- **Aesthetic Update**: Removed background from all Qadri AI logos and icons for a cleaner, transparent, modern look across the app.
+
 ## [1.0.55] - 2026-05-24
 
 ### Added

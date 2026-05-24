@@ -1,6 +1,6 @@
 {
   "name": "qadri_ai",
-  "version": "1.0.55",
+  "version": "1.0.56",
   "description": "Qadri AI - Your advanced desktop assistant.",
   "author": "Qadri AI Team",
   "main": "electron/main.js",
@@ -68,6 +68,7 @@
   "dependencies": {
     "@google/genai": "^1.41.0",
     "@google/generative-ai": "^0.24.1",
+    "@imgly/background-removal-node": "^1.4.5",
     "@jitsi/robotjs": "^0.6.21",
     "@picovoice/porcupine-node": "^4.0.1",
     "@picovoice/pvrecorder-node": "^1.2.8",
