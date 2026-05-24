@@ -32,11 +32,10 @@ const getLicensePath = () => path.join(app.getPath('userData'), 'license.json');
 
 async function getMachineId() {
   try {
-    const [cpu, disk] = await Promise.all([si.cpu(), si.diskLayout()]);
-    const raw = `${cpu.brand}-${cpu.manufacturer}-${disk[0]?.serialNum || 'nodisk'}`;
+    const raw = `${os.hostname()}-${os.userInfo().username}-${os.cpus()[0]?.model}`;
     return crypto.createHash('sha256').update(raw).digest('hex').slice(0, 32);
   } catch {
-    return crypto.createHash('sha256').update(os.hostname() + os.cpus()[0]?.model).digest('hex').slice(0, 32);
+    return crypto.createHash('sha256').update('fallback-machine-id').digest('hex').slice(0, 32);
   }
 }
 const { registerDomainHandlers } = require('./main/ipc');
@@ -513,6 +512,7 @@ function registerHandlers() {
   });
 
   ipcMain.handle('license-passed', async (event) => {
+    console.log('[Main] license-passed triggered by frontend!');
     const win = BrowserWindow.fromWebContents(event.sender);
     if (win) {
       win.setResizable(true);
