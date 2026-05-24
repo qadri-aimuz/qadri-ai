@@ -1,6 +1,6 @@
 {
   "name": "qadri_ai",
-  "version": "1.0.65",
+  "version": "1.0.66",
   "description": "Qadri AI - Your advanced desktop assistant.",
   "author": "Qadri AI Team",
   "main": "electron/main.js",
@@ -59,8 +59,8 @@
       "shortcutName": "Qadri AI",
       "uninstallerIcon": "public/icon.ico",
       "artifactName": "Qadri AI Setup ${version}.exe",
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "menuCategory": "Qadri AI"

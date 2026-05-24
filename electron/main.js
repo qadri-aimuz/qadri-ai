@@ -1381,7 +1381,7 @@ if (!gotTheLock) {
       if (wakeWordProcess) {
         try { wakeWordProcess.kill(); } catch(e) {}
       }
-      autoUpdater.quitAndInstall(false, true);
+      autoUpdater.quitAndInstall(true, true);
     });
     // ==========================
 
