@@ -175,14 +175,10 @@ function createWindow() {
     }
     // Fallback: if license-passed IPC was never called, show main window anyway
     setTimeout(() => {
-      if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
         console.log('[Main] Fallback: showing main window after splash.');
-        mainWindow.setResizable(true);
-        mainWindow.setMinimumSize(1000, 700);
-        mainWindow.center();
         mainWindow.show();
         mainWindow.focus();
-        mainWindow.maximize();
       }
     }, 500);
   }, 8000);
@@ -196,9 +192,8 @@ function createWindow() {
       mainWindow.loadURL(`http://localhost:${port}/index.html`);
     }).catch(err => {
       console.error('Failed to start production server:', err);
-      const fallbackPath = app.isPackaged
-        ? path.join(process.resourcesPath, 'dist/index.html')
-        : path.join(__dirname, '../dist/index.html');
+      // The dist folder is bundled inside app.asar. So __dirname + '../dist' is always correct!
+      const fallbackPath = path.join(__dirname, '../dist/index.html');
       mainWindow.loadFile(fallbackPath);
     });
   }
@@ -1340,64 +1335,38 @@ if (!gotTheLock) {
       }
     });
     autoUpdater.on('download-progress', (progressObj) => {
-      const percent = Math.round(progressObj.percent);
-      console.log(`Downloaded ${percent}%`);
+      let percent = Math.round(progressObj.percent);
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.executeJavaScript(`
-            if (document.getElementById('qadri-updater-text')) {
-                document.getElementById('qadri-updater-text').innerText = 'Downloading Update: ${percent}%';
+            if (document.getElementById('qadri-updater-bar')) {
                 document.getElementById('qadri-updater-bar').style.width = '${percent}%';
+                document.getElementById('qadri-updater-text').innerText = 'Downloading Update... ${percent}%';
             }
         `).catch(e => console.error(e));
       }
     });
     autoUpdater.on('update-downloaded', (info) => {
-      console.log('Update downloaded. Prompting user to install...');
+      console.log('Update downloaded:', info.version);
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.executeJavaScript(`
             if (document.getElementById('qadri-updater-text')) {
-                document.getElementById('qadri-updater-text').innerText = 'Update Ready! Please confirm restart...';
+                document.getElementById('qadri-updater-text').innerText = 'Update v${info.version} Ready!';
+                document.getElementById('qadri-updater-bar').style.background = '#00ffcc';
                 document.getElementById('qadri-updater-bar').style.width = '100%';
-                document.getElementById('qadri-updater-bar').style.background = '#00ff77';
+                
+                if (!document.getElementById('qadri-updater-btn')) {
+                    const btn = document.createElement('button');
+                    btn.id = 'qadri-updater-btn';
+                    btn.innerText = 'Restart App';
+                    btn.style.cssText = 'margin-top:12px;width:100%;padding:8px;background:#00ffcc;color:#000;border:none;border-radius:6px;font-weight:bold;cursor:pointer;font-family:sans-serif;font-size:13px;transition:0.2s;';
+                    btn.onmouseover = () => btn.style.background = '#00e6b8';
+                    btn.onmouseout = () => btn.style.background = '#00ffcc';
+                    btn.onclick = () => window.electronAPI.invoke('install-update');
+                    document.getElementById('qadri-updater-ui').appendChild(btn);
+                }
             }
         `).catch(e => console.error(e));
       }
-
-      dialog.showMessageBox({
-        type: 'info',
-        title: 'Update Ready',
-        message: 'A new version of Qadri AI has been downloaded.',
-        detail: 'Do you want to restart the application to apply the updates now?',
-        buttons: ['Restart Now', 'Later'],
-        defaultId: 0,
-        cancelId: 1
-      }).then((result) => {
-        if (result.response === 0) {
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.executeJavaScript(`
-                if (document.getElementById('qadri-updater-text')) {
-                    document.getElementById('qadri-updater-text').innerText = 'Restarting App...';
-                }
-            `).catch(e => console.error(e));
-          }
-          // isSilent: false, isForceRunAfter: true (ensures the app starts again on Windows)
-          autoUpdater.quitAndInstall(false, true);
-        } else {
-          // Hide UI if they choose "Later"
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.executeJavaScript(`
-                if (document.getElementById('qadri-updater-ui')) {
-                    document.getElementById('qadri-updater-ui').style.opacity = '0';
-                    setTimeout(() => {
-                        if (document.getElementById('qadri-updater-ui')) {
-                            document.getElementById('qadri-updater-ui').remove();
-                        }
-                    }, 500);
-                }
-            `).catch(e => console.error(e));
-          }
-        }
-      });
     });
 
     try {
@@ -1405,6 +1374,13 @@ if (!gotTheLock) {
     } catch (err) {
       console.error('Failed to check for updates:', err);
     }
+
+    ipcMain.handle('install-update', () => {
+      if (wakeWordProcess) {
+        try { wakeWordProcess.kill(); } catch(e) {}
+      }
+      autoUpdater.quitAndInstall(false, true);
+    });
     // ==========================
 
     // ── 🔥 Jarvis Overlay — Global keyboard shortcut (Ctrl+Shift+J) ─────────
