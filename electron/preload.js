@@ -78,7 +78,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on('whatsapp-event', sub);
         return () => ipcRenderer.removeListener('whatsapp-event', sub);
     },
-    invokeWhatsApp: (action, payload) => ipcRenderer.invoke(action, payload)
+    invokeWhatsApp: (action, payload) => ipcRenderer.invoke(action, payload),
+    
+    // ── Qadri Sentinel Console ──
+    startSentinelTerminal: () => ipcRenderer.invoke('start-sentinel-terminal'),
+    stopSentinelTerminal: () => ipcRenderer.invoke('stop-sentinel-terminal'),
+    writeSentinelTerminal: (data) => ipcRenderer.invoke('write-sentinel-terminal', data),
+    translateSentinelCommand: (input) => ipcRenderer.invoke('translate-sentinel-command', input),
+    onSentinelTerminalData: (cb) => {
+        const sub = (_e, data) => cb(data);
+        ipcRenderer.on('sentinel-terminal-data', sub);
+        return () => ipcRenderer.removeListener('sentinel-terminal-data', sub);
+    },
+    readClipboard: () => ipcRenderer.invoke('read-clipboard'),
+    writeClipboard: (text) => ipcRenderer.invoke('write-clipboard', text),
+    getSysInfo: () => ipcRenderer.invoke('get-sys-info'),
+    askAI: (query) => ipcRenderer.invoke('ask-ai', query),
+    checkAIHealth: () => ipcRenderer.invoke('check-ai-health'),
+    
+    // OS Expansion APIs
+    getAgentStatus: () => ipcRenderer.invoke('get-agent-status'),
+    saveMemory: (key, value) => ipcRenderer.invoke('save-memory', {key, value}),
+    getMemory: (key) => ipcRenderer.invoke('get-memory', key)
 });
 
 // Bridge for WhatsApp iframe and dynamic injection

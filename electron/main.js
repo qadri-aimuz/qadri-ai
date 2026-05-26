@@ -12,6 +12,14 @@ const screenshot = require('screenshot-desktop');
 const axios = require('axios');
 const { clipboard, Notification } = require('electron');
 const http = require('http');
+
+// --- QADRI OS ENGINES ---
+const agentBus = require('./agent-bus');
+const persistentMemoryService = require('./persistent-memory-service');
+const workflowEngine = require('./workflow-engine');
+const selfHealingEngine = require('./self-healing-engine');
+const visionAgent = require('./vision-agent');
+
 require('dotenv').config();
 const crypto = require('crypto');
 const bootstrapHelpers = require('./main/bootstrap/qadri-bootstrap');
@@ -20,6 +28,16 @@ const memoryService = require('./services/memory-service');
 const backgroundAgentService = require('./services/background-agent-service');
 const ComputerUseAgent = require('./services/computer-use-agent');
 let computerUseAgent = null;
+
+// Hook existing BrowserService to Agent Bus
+agentBus.registerAgent('BrowserAgent');
+agentBus.on('task:BrowserAgent', (task) => {
+    console.log(`[BrowserAgent] Executing autonomous task: ${task.action}`);
+    if (task.action === 'navigate') {
+        console.log(`[BrowserAgent] Navigating to ${task.url}`);
+        // BrowserService logic goes here
+    }
+});
 
 const rewindDb = require('./services/rewind/database');
 const rewindObserver = require('./services/rewind/observer');
@@ -41,7 +59,7 @@ async function getMachineId() {
 const { registerDomainHandlers } = require('./main/ipc');
 
 let wakeWordProcess = null;
-
+let sentinelProcess = null;
 // Production Server for YouTube embeds (file:// origin is blocked by YouTube)
 let productionServer = null;
 let productionPort = 45678;
@@ -442,6 +460,203 @@ function registerHandlers() {
   ipcMain.handle('get-task-status', (event, taskId) => backgroundAgentService.getTaskStatus(taskId));
   ipcMain.handle('get-all-tasks', () => backgroundAgentService.getAllTasks());
 
+  // Qadri Sentinel Console Handlers
+  ipcMain.handle('start-sentinel-terminal', async (event) => {
+    if (sentinelProcess) return true;
+    sentinelProcess = spawn('powershell.exe', ['-NoLogo'], {
+      cwd: process.env.USERPROFILE || process.cwd(),
+      env: process.env,
+    });
+    
+    sentinelProcess.stdout.on('data', (data) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('sentinel-terminal-data', data.toString());
+      }
+    });
+    
+    sentinelProcess.stderr.on('data', (data) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('sentinel-terminal-data', data.toString());
+      }
+    });
+
+    sentinelProcess.on('exit', () => {
+      sentinelProcess = null;
+    });
+    return true;
+  });
+
+  ipcMain.handle('write-sentinel-terminal', async (event, data) => {
+    if (sentinelProcess && sentinelProcess.stdin) {
+      sentinelProcess.stdin.write(data);
+    }
+    return true;
+  });
+
+  ipcMain.handle('stop-sentinel-terminal', async () => {
+    if (sentinelProcess) {
+      sentinelProcess.kill();
+      sentinelProcess = null;
+    }
+    return true;
+  });
+
+  ipcMain.handle('read-clipboard', async () => {
+    return clipboard.readText();
+  });
+
+  ipcMain.handle('write-clipboard', async (event, text) => {
+    clipboard.writeText(text);
+    return true;
+  });
+
+  ipcMain.handle('get-sys-info', async () => {
+    return {
+      platform: os.platform(),
+      release: os.release(),
+      arch: os.arch(),
+      hostname: os.hostname(),
+      cpus: os.cpus().length,
+      cpuModel: os.cpus()[0]?.model || 'Unknown',
+      totalMem: os.totalmem(),
+      freeMem: os.freemem()
+    };
+  });
+
+  ipcMain.handle('ask-ai', async (event, query) => {
+    try {
+      let apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        try {
+          const p = getSecretKeyPath();
+          if (fs.existsSync(p)) {
+            const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+            apiKey = data.apiKey || data.geminiKey || null;
+          }
+        } catch(e) {}
+      }
+      if (!apiKey) return { error: 'Gemini API Key missing!' };
+      
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `You are Qadri Sentinel AI, an elite cyber-terminal assistant. Answer concisely and functionally. Question: ${query}`;
+      
+      const result = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+      
+      let text = '';
+      if (typeof result.text === 'string') text = result.text;
+      else if (result.candidates?.[0]?.content?.parts?.[0]?.text) text = result.candidates[0].content.parts[0].text;
+      else if (result.response && typeof result.response.text === 'function') text = result.response.text();
+      
+      return { answer: text };
+    } catch (err) {
+      return { error: err.message };
+    }
+  });
+
+  ipcMain.handle('translate-sentinel-command', async (event, input) => {
+    try {
+      let apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        try {
+          const p = getSecretKeyPath();
+          if (fs.existsSync(p)) {
+            const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+            apiKey = data.apiKey || data.geminiKey || null;
+          }
+        } catch(e) {}
+      }
+      if (!apiKey) return { error: 'Gemini API Key missing! Please set it in Qadri AI Settings.' };
+      
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `You are the Qadri Sentinel AI, an elite terminal assistant. The user entered a natural language request in a Windows terminal:
+"${input}"
+
+Determine if the user is asking a conversational question OR asking to perform an action/command on their computer.
+
+Respond ONLY in JSON format using one of these two structures:
+
+1. For actions, tasks, or system commands:
+{
+  "type": "command",
+  "command": "Get-Process",
+  "explanation": "Fetching the list of running processes.",
+  "blocked": false,
+  "reason": ""
+}
+(If dangerous, set "blocked": true, explain in "reason", and leave "command" empty).
+
+2. For conversational questions (e.g., "who are you", "what is hacking", "hi"):
+{
+  "type": "chat",
+  "answer": "I am Qadri Sentinel AI, your advanced cyber-terminal assistant."
+}`;
+
+      const result = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+      
+      let text = '';
+      if (typeof result.text === 'string') text = result.text;
+      else if (result.candidates?.[0]?.content?.parts?.[0]?.text) text = result.candidates[0].content.parts[0].text;
+      else if (result.response && typeof result.response.text === 'function') text = result.response.text();
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      } else {
+        return { error: 'Failed to parse AI response' };
+      }
+    } catch (err) {
+      return { error: err.message };
+    }
+  });
+
+  ipcMain.handle('check-ai-health', async () => {
+    try {
+      let apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        try {
+          const p = getSecretKeyPath();
+          if (fs.existsSync(p)) {
+            const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+            apiKey = data.apiKey || data.geminiKey || null;
+          }
+        } catch(e) {}
+      }
+      if (!apiKey) return { status: 'error', message: 'No API Key' };
+      
+      const ai = new GoogleGenAI({ apiKey });
+      await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: "ping" }] }],
+      });
+      return { status: 'ok' };
+    } catch (err) {
+      return { status: 'error', message: err.message };
+    }
+  });
+
+  // OS Expansion Handlers
+  ipcMain.handle('get-agent-status', () => {
+    return {
+      agents: agentBus.getActiveAgents(),
+      workflows: workflowEngine.getActiveWorkflows()
+    };
+  });
+
+  ipcMain.handle('save-memory', (event, {key, value}) => {
+    persistentMemoryService.save(key, value);
+    return true;
+  });
+
+  ipcMain.handle('get-memory', (event, key) => {
+    return persistentMemoryService.retrieve(key);
+  });
+
   // Computer Use Agent Handlers
   ipcMain.handle('start-computer-use', async (event, goal) => {
       if (computerUseAgent) computerUseAgent.start(goal);
@@ -667,12 +882,21 @@ function registerHandlers() {
 
   ipcMain.handle('fetch-dashboard-data', async (event, { location, interests }) => {
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) throw new Error('API Key missing');
+      let apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        try {
+          const p = getSecretKeyPath();
+          if (fs.existsSync(p)) {
+            const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+            apiKey = data.apiKey || data.geminiKey || null;
+          }
+        } catch(e) {}
+      }
+      if (!apiKey) throw new Error('API Key missing. Please set it in Qadri AI Settings.');
       const ai = new GoogleGenAI({ apiKey });
       const prompt = `Search for top 5 news headlines for: ${interests.join(', ')} in ${location || 'Pakistan'}. Also get weather. Respond in ROMAN URDU and return JSON: {"headlines": [...], "weather": {"today": "...", "tomorrow": "...", "dayAfter": "..."}}`;
       const result = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: { tools: [{ googleSearch: {} }] }
       });

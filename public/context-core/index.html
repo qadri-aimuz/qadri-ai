@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Context Core</title>
+  <title>Qadri Sentinel Console</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -25,8 +25,14 @@
     }
   </script>
   
-  <!-- Inter Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Xterm.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+
   
   <!-- React, ReactDOM, Babel, Framer Motion -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -39,12 +45,12 @@
 
   <style>
     body {
-      background-color: #050816;
+      background-color: #03050c;
       color: #ffffff;
-      font-family: 'Inter', sans-serif;
+      font-family: 'JetBrains Mono', monospace;
       margin: 0;
       padding: 0;
-      overflow: hidden; /* Hide scrollbars for the iframe */
+      overflow: hidden;
     }
     
     /* Futuristic Scrollbar */
