@@ -1,6 +1,6 @@
 {
   "name": "qadri_ai",
-  "version": "1.0.72",
+  "version": "1.0.73",
   "description": "Qadri AI - Your advanced desktop assistant.",
   "author": "Qadri AI Team",
   "main": "electron/main.js",
@@ -25,7 +25,7 @@
       }
     ],
     "directories": {
-      "output": "release"
+      "output": "dist"
     },
     "files": [
       "electron/**/*",
@@ -58,7 +58,7 @@
       "installerHeaderIcon": "public/icon.ico",
       "shortcutName": "Qadri AI",
       "uninstallerIcon": "public/icon.ico",
-      "artifactName": "Qadri AI Setup ${version}.exe",
+      "artifactName": "QadriAI-Setup-${version}.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "perMachine": false,
