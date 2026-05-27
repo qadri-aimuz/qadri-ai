@@ -1,0 +1,108 @@
+{
+  "name": "qadri_ai",
+  "version": "1.0.75",
+  "description": "Qadri AI - Your advanced desktop assistant.",
+  "author": "Qadri AI Team",
+  "main": "electron/main.js",
+  "license": "ISC",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64 -p always",
+    "build:dir": "electron-builder --win --x64 --dir"
+  },
+  "build": {
+    "appId": "com.qadriai.desktop",
+    "productName": "QadriAI",
+    "copyright": "Copyright © 2024 Qadri AI Team",
+    "asar": true,
+    "npmRebuild": false,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "qadri-aimuz",
+        "repo": "qadri-ai"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "public/**/*",
+      "audio/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "public",
+        "to": "public",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/icon.ico",
+      "uninstallerIcon": "public/icon.ico",
+      "installerHeaderIcon": "public/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "QadriAI"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "dependencies": {
+    "@google/genai": "^1.41.0",
+    "@google/generative-ai": "^0.24.1",
+    "@imgly/background-removal-node": "^1.4.5",
+    "@jitsi/robotjs": "^0.6.21",
+    "@picovoice/porcupine-node": "^4.0.1",
+    "@picovoice/pvrecorder-node": "^1.2.8",
+    "axios": "^1.13.6",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "electron-updater": "^6.8.3",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "fast-glob": "^3.3.3",
+    "fs-extra": "^11.3.5",
+    "jimp": "^1.6.0",
+    "js-tiktoken": "^1.0.21",
+    "lowdb": "^7.0.1",
+    "lucide-react": "^0.562.0",
+    "mammoth": "^1.11.0",
+    "mermaid": "^11.12.2",
+    "mime-types": "^3.0.2",
+    "node-record-lpcm16": "^1.0.1",
+    "open": "^11.0.0",
+    "pdf-parse": "^2.4.5",
+    "playwright": "^1.58.2",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.6.0",
+    "remark-gfm": "^4.0.1",
+    "screenshot-desktop": "^1.15.3",
+    "serialport": "^13.0.0",
+    "systeminformation": "^5.31.1",
+    "tailwind-merge": "^3.4.0",
+    "tesseract.js": "^7.0.0",
+    "trash": "^1.0.1"
+  }
+}

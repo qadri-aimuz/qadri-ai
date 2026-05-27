@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Qadri AI — Initializing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&family=Inter:wght@200;300&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --cyan:#00ff88;--purple:#0066ff;--pink:#00d4ff;
+      --cyan2:rgba(0,255,136,.15);--dark:#030509;
+    }
+    html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);user-select:none;}
+
+    /* ═══════════════ BACKGROUND ═══════════════ */
+    #bg-canvas{position:fixed;inset:0;z-index:0;}
+
+    /* grid overlay */
+    .grid-overlay{
+      position:fixed;inset:0;z-index:1;
+      background-image:
+        linear-gradient(rgba(0,229,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,.04) 1px, transparent 1px);
+      background-size:60px 60px;
+      animation:gridShift 20s linear infinite;
+    }
+    @keyframes gridShift{to{background-position:60px 60px;}}
+
+    /* corner brackets */
+    .bracket{position:fixed;width:50px;height:50px;z-index:5;}
+    .bracket::before,.bracket::after{content:'';position:absolute;background:var(--cyan);opacity:.5;}
+    .bracket.tl{top:20px;left:20px;}
+    .bracket.tl::before{width:100%;height:2px;top:0;left:0;}
+    .bracket.tl::after{width:2px;height:100%;top:0;left:0;}
+    .bracket.tr{top:20px;right:20px;}
+    .bracket.tr::before{width:100%;height:2px;top:0;right:0;}
+    .bracket.tr::after{width:2px;height:100%;top:0;right:0;}
+    .bracket.bl{bottom:20px;left:20px;}
+    .bracket.bl::before{width:100%;height:2px;bottom:0;left:0;}
+    .bracket.bl::after{width:2px;height:100%;bottom:0;left:0;}
+    .bracket.br{bottom:20px;right:20px;}
+    .bracket.br::before{width:100%;height:2px;bottom:0;right:0;}
+    .bracket.br::after{width:2px;height:100%;bottom:0;right:0;}
+
+    /* scan line sweep */
+    .scan-sweep{
+      position:fixed;inset:0;z-index:2;pointer-events:none;
+      background:linear-gradient(to bottom,transparent 40%,rgba(0,229,255,.03) 50%,transparent 60%);
+      animation:scanSweep 3s ease-in-out infinite;
+    }
+    @keyframes scanSweep{
+      0%{transform:translateY(-100%);}
+      100%{transform:translateY(100%);}
+    }
+
+    /* ═══════════════ CENTER STAGE ═══════════════ */
+    #stage{
+      position:fixed;inset:0;z-index:10;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:0;
+    }
+
+    /* ── Logo assembly ── */
+    .logo-system{
+      position:relative;width:320px;height:320px;
+      display:flex;align-items:center;justify-content:center;
+      margin-bottom:48px;
+      animation:systemAppear 1s cubic-bezier(.22,1,.36,1) forwards;
+      opacity:0;transform:scale(.7);
+    }
+    @keyframes systemAppear{to{opacity:1;transform:scale(1);}}
+
+    /* outer glow ring */
+    .glow-ring{
+      position:absolute;
+      border-radius:50%;
+      border:1px solid transparent;
+      animation:spin linear infinite;
+    }
+    .gr1{
+      width:310px;height:310px;
+      border-top-color:rgba(0,229,255,.9);
+      border-right-color:rgba(0,229,255,.2);
+      animation-duration:4s;
+      box-shadow:0 0 20px rgba(0,229,255,.3);
+      filter:drop-shadow(0 0 8px var(--cyan));
+    }
+    .gr2{
+      width:285px;height:285px;
+      border-bottom-color:rgba(155,93,229,.8);
+      border-left-color:rgba(155,93,229,.2);
+      animation-duration:3s;animation-direction:reverse;
+    }
+    .gr3{
+      width:255px;height:255px;
+      border-top-color:rgba(199,125,255,.6);
+      border-right-color:rgba(199,125,255,.1);
+      animation-duration:5s;
+    }
+    .gr4{
+      width:220px;height:220px;
+      border-bottom-color:rgba(0,229,255,.4);
+      animation-duration:2.5s;animation-direction:reverse;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* orbit dots */
+    .orbit{
+      position:absolute;width:300px;height:300px;
+      border-radius:50%;
+      animation:spin 6s linear infinite;
+    }
+    .orbit::before,.orbit::after{
+      content:'';position:absolute;
+      width:8px;height:8px;border-radius:50%;
+      background:var(--cyan);
+      box-shadow:0 0 12px var(--cyan),0 0 24px var(--cyan);
+    }
+    .orbit::before{top:-4px;left:50%;transform:translateX(-50%);}
+    .orbit::after{bottom:-4px;left:50%;transform:translateX(-50%);background:var(--pink);box-shadow:0 0 12px var(--pink);}
+    .orbit2{animation-duration:9s;animation-direction:reverse;transform:rotate(60deg);}
+    .orbit3{animation-duration:7s;transform:rotate(30deg);}
+    .orbit2::before,.orbit2::after{background:var(--purple);box-shadow:0 0 12px var(--purple);}
+
+    /* logo image */
+    .logo-img{
+      position:relative;z-index:5;
+      width:170px;height:170px;
+      object-fit:contain;
+      animation:logoBreathe 3s ease-in-out infinite, logoRotateIn 1.2s cubic-bezier(.22,1,.36,1) forwards;
+      opacity:0;
+      filter:drop-shadow(0 0 30px rgba(155,93,229,.8)) drop-shadow(0 0 60px rgba(0,229,255,.4));
+    }
+    @keyframes logoBreathe{
+      0%,100%{filter:drop-shadow(0 0 30px rgba(155,93,229,.8)) drop-shadow(0 0 60px rgba(0,229,255,.4));}
+      50%{filter:drop-shadow(0 0 50px rgba(155,93,229,1)) drop-shadow(0 0 80px rgba(0,229,255,.7));}
+    }
+    @keyframes logoRotateIn{
+      0%{opacity:0;transform:rotateY(-180deg) scale(.5);}
+      100%{opacity:1;transform:rotateY(0deg) scale(1);}
+    }
+
+    /* ── Brand ── */
+    .brand-block{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:40px;}
+    .brand-name{
+      font-family:'Orbitron',sans-serif;font-size:56px;font-weight:900;
+      letter-spacing:12px;text-transform:uppercase;
+      background:linear-gradient(135deg,#c77dff 0%,#00e5ff 40%,#9b5de5 70%,#00e5ff 100%);
+      background-size:200% auto;
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+      animation:brandSlide .8s cubic-bezier(.22,1,.36,1) forwards .8s, shimmer 4s linear infinite 1.6s;
+      opacity:0;transform:translateY(30px);
+    }
+    @keyframes brandSlide{to{opacity:1;transform:translateY(0);}}
+    @keyframes shimmer{to{background-position:200% center;}}
+
+    .brand-sub{
+      font-family:'Orbitron',sans-serif;font-size:13px;font-weight:400;
+      letter-spacing:8px;color:rgba(0,229,255,.6);
+      animation:brandSlide .8s cubic-bezier(.22,1,.36,1) forwards 1s;
+      opacity:0;transform:translateY(20px);
+    }
+
+    /* ── Divider ── */
+    .divider{
+      width:0;height:1px;margin-bottom:36px;
+      background:linear-gradient(90deg,transparent,var(--cyan),var(--purple),var(--pink),transparent);
+      animation:dividerGrow .8s ease forwards 1.2s;
+      box-shadow:0 0 8px rgba(0,229,255,.3);
+    }
+    @keyframes dividerGrow{to{width:400px;}}
+
+    /* ── Status terminal ── */
+    .terminal{
+      font-family:'Share Tech Mono',monospace;
+      display:flex;flex-direction:column;align-items:center;gap:10px;
+      animation:brandSlide .6s ease forwards 1.4s;
+      opacity:0;transform:translateY(15px);
+    }
+    .term-status{
+      font-size:11px;letter-spacing:3px;color:rgba(0,229,255,.7);
+      text-transform:uppercase;min-height:18px;
+      transition:all .25s;
+    }
+    .term-status::before{content:'> ';color:var(--purple);}
+
+    /* progress */
+    .prog-wrap{
+      position:relative;width:380px;
+    }
+    .prog-labels{
+      display:flex;justify-content:space-between;
+      font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.25);
+      margin-bottom:6px;font-family:'Share Tech Mono',monospace;
+    }
+    .prog-track{
+      width:100%;height:2px;
+      background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;
+      box-shadow:inset 0 0 6px rgba(0,0,0,.5);
+    }
+    .prog-fill{
+      height:100%;width:0;border-radius:2px;
+      background:linear-gradient(90deg,var(--purple),var(--cyan),var(--pink));
+      box-shadow:0 0 12px var(--cyan),0 0 24px rgba(0,229,255,.3);
+      animation:fillProg 6s cubic-bezier(.4,0,.2,1) forwards 1.8s;
+      position:relative;
+    }
+    .prog-fill::after{
+      content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);
+      width:4px;height:10px;border-radius:2px;
+      background:white;box-shadow:0 0 8px white;
+    }
+    @keyframes fillProg{
+      0%{width:0%;}10%{width:8%;}25%{width:28%;}
+      45%{width:47%;}60%{width:64%;}75%{width:79%;}
+      90%{width:91%;}100%{width:100%;}
+    }
+
+    /* ── System stats bar ── */
+    .sys-stats{
+      display:flex;gap:32px;margin-top:16px;
+      font-family:'Share Tech Mono',monospace;font-size:9px;
+      letter-spacing:2px;color:rgba(255,255,255,.2);
+      animation:brandSlide .5s ease forwards 2s;opacity:0;
+    }
+    .stat{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .stat-val{color:rgba(0,229,255,.5);font-size:11px;}
+
+    /* ── Metadata corners ── */
+    .meta{
+      position:fixed;font-family:'Share Tech Mono',monospace;font-size:9px;
+      letter-spacing:2px;color:rgba(255,255,255,.15);
+      animation:appear .5s ease forwards 2.2s;opacity:0;z-index:20;
+    }
+    .meta-tl{top:28px;left:72px;}
+    .meta-tr{top:28px;right:72px;text-align:right;}
+    .meta-bl{bottom:28px;left:72px;}
+    .meta-br{bottom:28px;right:72px;text-align:right;}
+    @keyframes appear{to{opacity:1;}}
+
+    /* ── Exit anim ── */
+    .do-exit{animation:exitScene .7s cubic-bezier(.4,0,1,1) forwards!important;}
+    @keyframes exitScene{
+      0%{opacity:1;transform:scale(1);}
+      100%{opacity:0;transform:scale(1.06);}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <div class="grid-overlay"></div>
+  <div class="scan-sweep"></div>
+
+  <!-- Corner UI brackets -->
+  <div class="bracket tl"></div>
+  <div class="bracket tr"></div>
+  <div class="bracket bl"></div>
+  <div class="bracket br"></div>
+
+  <!-- Metadata overlays -->
+  <div class="meta meta-tl">QADRI AI SYS v1.0.71</div>
+  <div class="meta meta-tr" id="clock-display">00:00:00</div>
+  <div class="meta meta-bl">© 2025 QADRI AI — ALL RIGHTS RESERVED</div>
+  <div class="meta meta-br">NEURAL ENGINE ONLINE</div>
+
+  <!-- Center Stage -->
+  <div id="stage">
+    <!-- 3D Logo System -->
+    <div class="logo-system" style="animation-delay:.2s">
+      <div class="glow-ring gr1"></div>
+      <div class="glow-ring gr2"></div>
+      <div class="glow-ring gr3"></div>
+      <div class="glow-ring gr4"></div>
+      <div class="orbit orbit1"></div>
+      <div class="orbit orbit2"></div>
+      <div class="orbit orbit3"></div>
+      <img id="logo-img" src="logo_3d.png" alt="Qadri AI" class="logo-img"
+           onerror="this.src='logo.png'"/>
+    </div>
+
+    <!-- Brand Name -->
+    <div class="brand-block">
+      <div class="brand-name">QADRI AI</div>
+      <div class="brand-sub">ADVANCED INTELLIGENCE PLATFORM</div>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- Terminal + Progress -->
+    <div class="terminal">
+      <div class="term-status" id="status-txt">INITIALIZING QUANTUM CORE</div>
+      <div class="prog-wrap">
+        <div class="prog-labels">
+          <span>SYSTEM LOAD</span>
+          <span id="pct-txt">0%</span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" id="prog-fill"></div>
+        </div>
+      </div>
+      <div class="sys-stats">
+        <div class="stat"><span class="stat-val" id="stat-mem">—</span><span>MEMORY</span></div>
+        <div class="stat"><span class="stat-val" id="stat-cpu">—</span><span>NEURAL CORES</span></div>
+        <div class="stat"><span class="stat-val" id="stat-mod">—</span><span>AI MODULES</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio -->
+  <audio id="snd-boot"   src="audio/initialize.wav"       preload="auto" volume="0.5"></audio>
+  <audio id="snd-ping"   src="audio/button.wav"           preload="auto"></audio>
+  <audio id="snd-access" src="audio/access_granted.wav"   preload="auto"></audio>
+
+<script>
+/* ══════════════════════════════════════════
+   PARTICLE + NEURAL NETWORK CANVAS
+   ══════════════════════════════════════════ */
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, nodes;
+
+function resize(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  nodes = Array.from({length:90},()=>({
+    x:Math.random()*W, y:Math.random()*H,
+    vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
+    r:Math.random()*2+.5, phase:Math.random()*Math.PI*2
+  }));
+}
+resize();
+window.addEventListener('resize',resize);
+
+const COLS=['rgba(0,229,255,','rgba(155,93,229,','rgba(199,125,255,'];
+let t=0;
+function drawBg(){
+  ctx.fillStyle='rgba(3,5,9,.25)';
+  ctx.fillRect(0,0,W,H);
+  t+=.008;
+  nodes.forEach(n=>{
+    n.x+=n.vx; n.y+=n.vy;
+    if(n.x<0)n.x=W; if(n.x>W)n.x=0;
+    if(n.y<0)n.y=H; if(n.y>H)n.y=0;
+    n.phase+=.01;
+    const a=(.2+.3*Math.abs(Math.sin(n.phase))).toFixed(2);
+    const ci=Math.floor(n.r)%COLS.length;
+    ctx.beginPath();
+    ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+    ctx.fillStyle=COLS[ci]+a+')';
+    ctx.fill();
+  });
+  // connection lines (neural network)
+  for(let i=0;i<nodes.length;i++){
+    for(let j=i+1;j<nodes.length;j++){
+      const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<110){
+        const alpha=((1-d/110)*0.12).toFixed(3);
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x,nodes[i].y);
+        ctx.lineTo(nodes[j].x,nodes[j].y);
+        ctx.strokeStyle=`rgba(0,229,255,${alpha})`;
+        ctx.lineWidth=.5;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+/* ══════════════════════════════════════════
+   CLOCK
+   ══════════════════════════════════════════ */
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock-display').textContent=
+    now.toTimeString().slice(0,8);
+}
+updateClock();
+setInterval(updateClock,1000);
+
+/* ══════════════════════════════════════════
+   STATUS MESSAGES + PERCENTAGE COUNTER
+   ══════════════════════════════════════════ */
+const statuses=[
+  [0,   'INITIALIZING QUANTUM CORE'],
+  [12,  'LOADING NEURAL NETWORK WEIGHTS'],
+  [25,  'CALIBRATING LANGUAGE MODELS'],
+  [40,  'ACTIVATING VISION SUBSYSTEM'],
+  [55,  'ESTABLISHING SECURE MEMORY LINK'],
+  [68,  'SYNCHRONIZING KNOWLEDGE BASE'],
+  [80,  'OPTIMIZING INFERENCE ENGINE'],
+  [92,  'RUNNING SYSTEM DIAGNOSTICS'],
+  [100, 'QADRI AI — SYSTEM ONLINE']
+];
+
+const statusEl=document.getElementById('status-txt');
+const pctEl=document.getElementById('pct-txt');
+const fillEl=document.getElementById('prog-fill');
+
+let currentPct=0;
+const pingAudio=document.getElementById('snd-ping');
+
+function updateStatus(){
+  // read actual fill width as percent
+  const fillW=fillEl.getBoundingClientRect().width;
+  const trackW=fillEl.parentElement.getBoundingClientRect().width||380;
+  currentPct=Math.round((fillW/trackW)*100);
+  pctEl.textContent=currentPct+'%';
+
+  // find which status message
+  let chosen=statuses[0][1];
+  for(let [threshold,msg] of statuses){
+    if(currentPct>=threshold) chosen=msg;
+  }
+  if(statusEl.textContent!==chosen){
+    statusEl.style.opacity='0';
+    setTimeout(()=>{
+      statusEl.textContent=chosen;
+      statusEl.style.opacity='1';
+      // play subtle ping
+      try{pingAudio.currentTime=0;pingAudio.volume=.15;pingAudio.play();}catch(e){}
+    },200);
+  }
+}
+// start after animation delay (1.8s for fill to start)
+setTimeout(()=>{ setInterval(updateStatus,350); }, 1800);
+
+/* ══════════════════════════════════════════
+   ANIMATED SYSTEM STATS (fake but cinematic)
+   ══════════════════════════════════════════ */
+function animateStats(){
+  const memEl=document.getElementById('stat-mem');
+  const cpuEl=document.getElementById('stat-cpu');
+  const modEl=document.getElementById('stat-mod');
+  let mem=0,cpu=0,mod=0;
+  const target=[94.7, 128, 47];
+  const iv=setInterval(()=>{
+    mem=Math.min(mem+2.3,target[0]);
+    cpu=Math.min(cpu+3.2,target[1]);
+    mod=Math.min(mod+1.2,target[2]);
+    memEl.textContent=mem.toFixed(1)+'%';
+    cpuEl.textContent=Math.round(cpu);
+    modEl.textContent=Math.round(mod);
+    if(mem>=target[0]&&cpu>=target[1]&&mod>=target[2]) clearInterval(iv);
+  },40);
+}
+setTimeout(animateStats,2200);
+
+/* ══════════════════════════════════════════
+   SOUNDS
+   ══════════════════════════════════════════ */
+const bootAudio=document.getElementById('snd-boot');
+const accessAudio=document.getElementById('snd-access');
+bootAudio.volume=0.45;
+bootAudio.play().catch(()=>{});
+
+// play access_granted near the end
+setTimeout(()=>{
+  try{accessAudio.volume=0.4;accessAudio.play();}catch(e){}
+},6200);
+
+/* ══════════════════════════════════════════
+   EXIT SEQUENCE (triggered from main process
+   or auto after 8s)
+   ══════════════════════════════════════════ */
+setTimeout(()=>{
+  document.body.style.animation='exitScene .7s cubic-bezier(.4,0,1,1) forwards';
+},7300);
+</script>
+</body>
+</html>
